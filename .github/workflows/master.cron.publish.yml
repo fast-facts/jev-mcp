@@ -1,0 +1,35 @@
+name: Publish
+
+on:
+  schedule:
+    - cron: '0 9 * * *'
+  workflow_dispatch:
+    branches:
+      - master
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+
+jobs:
+  run:
+    name: Publish
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+
+      - run: go test -race -shuffle=on -count=1 ./...
+      - run: go build -o bin/jev-mcp ./cmd/jev-mcp
+
+      - name: Run semantic-release
+        run: npx semantic-release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        continue-on-error: true

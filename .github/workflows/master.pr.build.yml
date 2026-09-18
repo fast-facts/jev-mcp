@@ -1,0 +1,26 @@
+name: Build on PR
+
+on:
+  pull_request:
+    branches:
+      - master
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.base_ref }}
+
+jobs:
+  run:
+    name: Build on PR
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+
+      - run: go test -race -shuffle=on -count=1 ./...
+      - run: go build -o bin/jev-mcp ./cmd/jev-mcp
